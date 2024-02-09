@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.RingtoneManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -151,7 +152,7 @@ class MainActivity : AppCompatActivity() {
             NotificationChannel(
                 NOTIFICATION_PROGRESS,
                 "進捗表示通知",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description="進捗状況を表示するような通知"
                 setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes)
@@ -240,6 +241,53 @@ class MainActivity : AppCompatActivity() {
                 NOTIFICATION_DEFAULT,
                 action
             )
+        }
+
+        binding.btProgress.setOnClickListener {
+            // 権限確認
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+                return@setOnClickListener
+            }
+
+            // 通知作成
+            val title = "進捗通知"
+            val content = "進捗バーが進んでいく"
+            val PROGRESS_MAX = 100
+            var progressCurrent = 0
+
+            val builder = NotificationCompat.Builder(this, NOTIFICATION_PROGRESS)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setOnlyAlertOnce(true)
+
+            lifecycleScope.launch { withContext(Dispatchers.IO){
+                with(NotificationManagerCompat.from(this@MainActivity)) {
+                    // 0%
+                    builder.setProgress(PROGRESS_MAX, progressCurrent, false)
+                    notify(R.string.app_name, builder.build())
+
+                    while(progressCurrent < PROGRESS_MAX) {
+                        Thread.sleep(50)
+                        progressCurrent++
+                        builder
+                            .setProgress(PROGRESS_MAX, progressCurrent, false)
+                            .setContentText("$content ($progressCurrent%)")
+                        notify(R.string.app_name, builder.build())
+                    }
+
+                    // 100%
+                    Thread.sleep(50)
+                    builder
+                        .setProgress(PROGRESS_MAX, progressCurrent, false)
+                        .setContentText("ダウンロード完了")
+                        .setOnlyAlertOnce(false)
+                    notify(R.string.app_name, builder.build())
+                }
+            } }
+
         }
 
         setContentView(binding.root)
