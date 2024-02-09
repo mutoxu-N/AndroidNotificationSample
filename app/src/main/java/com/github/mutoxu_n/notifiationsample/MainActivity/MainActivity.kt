@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@SuppressLint("InlinedApi")
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainActivityViewModel
     private lateinit var binding: ActivityMainBinding
@@ -287,7 +288,35 @@ class MainActivity : AppCompatActivity() {
                     notify(R.string.app_name, builder.build())
                 }
             } }
+        }
 
+        binding.btPush.setOnClickListener {
+            // 権限確認
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+                return@setOnClickListener
+            }
+
+            // 通知作成
+            val title = "押下可能な通知"
+            val content = "通知を押すとIntentが起動する"
+            val pendIntent = PendingIntent.getActivities(
+                this@MainActivity,
+                2,
+                arrayOf(Intent(this@MainActivity, ClickedActivity::class.java)),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val builder = NotificationCompat.Builder(this, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setContentIntent(pendIntent)
+
+            with(NotificationManagerCompat.from(this)) {
+                notify(R.string.app_name, builder.build())
+            }
         }
 
         setContentView(binding.root)
