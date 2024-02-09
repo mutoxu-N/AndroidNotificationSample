@@ -1,7 +1,10 @@
 package com.github.mutoxu_n.notifiationsample.MainActivity
 
+import android.app.NotificationManager
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.core.app.RemoteInput
 import com.github.mutoxu_n.notifiationsample.R
 import com.github.mutoxu_n.notifiationsample.databinding.ActivityClickedBinding
 
@@ -10,6 +13,13 @@ class ClickedActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityClickedBinding.inflate(layoutInflater)
+
+        RemoteInput.getResultsFromIntent(intent)?.let {
+            binding.msg.text = it.getCharSequence(MainActivity.KEY_TEXT_REPLY)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(R.string.app_name)
+        }
+
         setContentView(binding.root)
     }
 }

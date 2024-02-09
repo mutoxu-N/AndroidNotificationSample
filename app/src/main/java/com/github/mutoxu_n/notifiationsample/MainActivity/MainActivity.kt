@@ -10,14 +10,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.RingtoneManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.RemoteInput
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.github.mutoxu_n.notifiationsample.R
@@ -31,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     companion object {
+        const val KEY_TEXT_REPLY = "KEY_TEXT_REPLAY"
         private const val NOTIFICATION_DEFAULT = "NOTIFICATION_DEFAULT"
         private const val NOTIFICATION_PRIORITY_MIN = "NOTIFICATION_PRIORITY_MIN"
         private const val NOTIFICATION_PRIORITY_LOW = "NOTIFICATION_PRIORITY_LOW"
@@ -40,9 +40,9 @@ class MainActivity : AppCompatActivity() {
         private const val NOTIFICATION_DELAY_SCOPE = "NOTIFICATION_DELAY_SCOPE"
         private const val NOTIFICATION_VIBE = "NOTIFICATION_VIBE"
         private const val NOTIFICATION_SOUND = "NOTIFICATION_SOUND"
+        private const val NOTIFICATION_PROGRESS = "NOTIFICATION_PROGRESS"
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // チャンネル削除
+        notificationManager.deleteNotificationChannel(NOTIFICATION_DEFAULT)
         notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_MIN)
         notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_LOW)
         notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_HIGH)
@@ -58,9 +59,21 @@ class MainActivity : AppCompatActivity() {
         notificationManager.deleteNotificationChannel(NOTIFICATION_DELAY_SCOPE)
         notificationManager.deleteNotificationChannel(NOTIFICATION_VIBE)
         notificationManager.deleteNotificationChannel(NOTIFICATION_SOUND)
-        notificationManager.deleteNotificationChannel(NOTIFICATION_DEFAULT)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_PROGRESS)
 
         // チャンネル作成
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                NOTIFICATION_DEFAULT,
+                "デフォルト通知",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description="Builder設定時に使用するチャンネル"
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes)
+                vibrationPattern = longArrayOf(0, 500)
+            }
+        )
+
         notificationManager.createNotificationChannel(NotificationChannel(
                 NOTIFICATION_PRIORITY_MIN,
                 "優先度通知(MIN)",
@@ -136,15 +149,16 @@ class MainActivity : AppCompatActivity() {
 
         notificationManager.createNotificationChannel(
             NotificationChannel(
-                NOTIFICATION_DEFAULT,
-                "デフォルト通知",
+                NOTIFICATION_PROGRESS,
+                "進捗表示通知",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description="Builder設定時に使用するチャンネル"
+                description="進捗状況を表示するような通知"
                 setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes)
                 vibrationPattern = longArrayOf(0, 500)
             }
         )
+
 
         // クリックリスナ
         binding.btMin.setOnClickListener { createSimpleNotification(
@@ -185,16 +199,6 @@ class MainActivity : AppCompatActivity() {
         ) }
 
         binding.btAction.setOnClickListener {
-            val title = "1ボタン通知"
-            val content = "アクションボタン付きの通知"
-
-            // 権限確認
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-                return@setOnClickListener
-            }
-
             val pendIntent = PendingIntent.getActivities(
                 this@MainActivity,
                 0,
@@ -206,18 +210,37 @@ class MainActivity : AppCompatActivity() {
                 "開く", pendIntent
             ).build()
 
-            // 通知作成
-            val builder = NotificationCompat.Builder(this, NOTIFICATION_DEFAULT)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(title)
-                .setContentText(content)
-                .addAction(action)
-
-            with(NotificationManagerCompat.from(this)) {
-                notify(R.string.app_name, builder.build())
-            }
+            createNotificationWithAction(
+                "1ボタン通知",
+                "アクションボタン付きの通知",
+                NOTIFICATION_DEFAULT,
+                action
+            )
         }
 
+        binding.btInput.setOnClickListener {
+            val remoteInput = RemoteInput.Builder(KEY_TEXT_REPLY).run {
+                setLabel("メッセージを入力してください")
+                build()
+            }
+            val pendIntent = PendingIntent.getActivities(
+                this@MainActivity,
+                1,
+                arrayOf(Intent(this@MainActivity, ClickedActivity::class.java)),
+                PendingIntent.FLAG_MUTABLE
+            )
+            val action = NotificationCompat.Action.Builder(
+                R.drawable.ic_launcher_foreground,
+                "返信する", pendIntent
+            ).addRemoteInput(remoteInput).build()
+
+            createNotificationWithAction(
+                "入力可能通知",
+                "ボタンを押下すると文字列を入力できる",
+                NOTIFICATION_DEFAULT,
+                action
+            )
+        }
 
         setContentView(binding.root)
     }
@@ -236,6 +259,27 @@ class MainActivity : AppCompatActivity() {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText(content)
+
+        with(NotificationManagerCompat.from(this)) {
+            notify(R.string.app_name, builder.build())
+        }
+    }
+
+    @SuppressLint("InlinedApi")
+    private fun createNotificationWithAction(title: String, content: String, channel: String, action: NotificationCompat.Action) {
+        // 権限確認
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+            return
+        }
+
+        // 通知作成
+        val builder = NotificationCompat.Builder(this, channel)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(title)
+            .setContentText(content)
+            .addAction(action)
 
         with(NotificationManagerCompat.from(this)) {
             notify(R.string.app_name, builder.build())

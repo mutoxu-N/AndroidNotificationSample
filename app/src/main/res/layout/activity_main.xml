@@ -158,6 +158,26 @@
 
             tools:ignore="HardcodedText" />
 
+        <Button
+            android:id="@+id/btInput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="入力ボックス"
+
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="進捗状況"
+
+            tools:ignore="HardcodedText" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
