@@ -5,14 +5,18 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.AudioAttributes
 import android.media.RingtoneManager
-import androidx.appcompat.app.AppCompatActivity
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -27,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     companion object {
+        private const val NOTIFICATION_DEFAULT = "NOTIFICATION_DEFAULT"
         private const val NOTIFICATION_PRIORITY_MIN = "NOTIFICATION_PRIORITY_MIN"
         private const val NOTIFICATION_PRIORITY_LOW = "NOTIFICATION_PRIORITY_LOW"
         private const val NOTIFICATION_PRIORITY_HIGH = "NOTIFICATION_PRIORITY_HIGH"
@@ -37,6 +42,7 @@ class MainActivity : AppCompatActivity() {
         private const val NOTIFICATION_SOUND = "NOTIFICATION_SOUND"
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
@@ -52,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         notificationManager.deleteNotificationChannel(NOTIFICATION_DELAY_SCOPE)
         notificationManager.deleteNotificationChannel(NOTIFICATION_VIBE)
         notificationManager.deleteNotificationChannel(NOTIFICATION_SOUND)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_DEFAULT)
 
         // チャンネル作成
         notificationManager.createNotificationChannel(NotificationChannel(
@@ -127,6 +134,18 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                NOTIFICATION_DEFAULT,
+                "デフォルト通知",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description="Builder設定時に使用するチャンネル"
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes)
+                vibrationPattern = longArrayOf(0, 500)
+            }
+        )
+
         // クリックリスナ
         binding.btMin.setOnClickListener { createSimpleNotification(
             "優先度MIN", "優先度がMINの通知",
@@ -165,6 +184,41 @@ class MainActivity : AppCompatActivity() {
             NOTIFICATION_SOUND
         ) }
 
+        binding.btAction.setOnClickListener {
+            val title = "1ボタン通知"
+            val content = "アクションボタン付きの通知"
+
+            // 権限確認
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+                return@setOnClickListener
+            }
+
+            val pendIntent = PendingIntent.getActivities(
+                this@MainActivity,
+                0,
+                arrayOf(Intent(this@MainActivity, ClickedActivity::class.java)),
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            val action = NotificationCompat.Action.Builder(
+                R.drawable.ic_launcher_foreground,
+                "開く", pendIntent
+            ).build()
+
+            // 通知作成
+            val builder = NotificationCompat.Builder(this, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(title)
+                .setContentText(content)
+                .addAction(action)
+
+            with(NotificationManagerCompat.from(this)) {
+                notify(R.string.app_name, builder.build())
+            }
+        }
+
+
         setContentView(binding.root)
     }
 
@@ -187,4 +241,5 @@ class MainActivity : AppCompatActivity() {
             notify(R.string.app_name, builder.build())
         }
     }
+
 }
