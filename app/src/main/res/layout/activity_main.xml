@@ -33,7 +33,7 @@
 
         android:paddingBottom="10dp"
 
-        android:text="遅延"
+        android:text="特殊"
         android:textSize="24sp"
         android:gravity="center"
         tools:ignore="HardcodedText" />
@@ -73,22 +73,22 @@
             tools:ignore="HardcodedText" />
 
         <Button
-            android:id="@+id/btHigh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="2dp"
-
-            android:text="HIGH"
-
-            tools:ignore="HardcodedText" />
-
-        <Button
             android:id="@+id/btDefault"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
 
             android:text="DEFAULT"
+
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btHigh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="HIGH"
 
             tools:ignore="HardcodedText" />
 
@@ -119,12 +119,22 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <Button
-            android:id="@+id/bt10s"
+            android:id="@+id/btScope"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
 
-            android:text="5秒後"
+            android:text="非同期(5s)"
+
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btVibe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="カスタム振動"
 
             tools:ignore="HardcodedText" />
 

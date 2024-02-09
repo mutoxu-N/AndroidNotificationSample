@@ -1,6 +1,7 @@
 package com.github.mutoxu_n.notifiationsample.MainActivity
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -29,7 +30,8 @@ class MainActivity : AppCompatActivity() {
         private const val NOTIFICATION_PRIORITY_HIGH = "NOTIFICATION_PRIORITY_HIGH"
         private const val NOTIFICATION_PRIORITY_DEFAULT = "NOTIFICATION_PRIORITY_DEFAULT"
         private const val NOTIFICATION_PRIORITY_NONE = "NOTIFICATION_PRIORITY_NONE"
-        private const val NOTIFICATION_DELAY_5s = "NOTIFICATION_DELAY_5s"
+        private const val NOTIFICATION_DELAY_SCOPE = "NOTIFICATION_DELAY_SCOPE"
+        private const val NOTIFICATION_DELAY_VIBE = "NOTIFICATION_DELAY_VIBE"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,17 +57,17 @@ class MainActivity : AppCompatActivity() {
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
+            NOTIFICATION_PRIORITY_DEFAULT,
+            "優先度通知(DEFAULT)",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = "優先度がDEFAULTの通知" }
+        )
+
+        notificationManager.createNotificationChannel(NotificationChannel(
                 NOTIFICATION_PRIORITY_HIGH,
                 "優先度通知(HIGH)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply { description = "優先度がHIGHの通知" }
-        )
-
-        notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_PRIORITY_DEFAULT,
-                "優先度通知(DEFAULT)",
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply { description = "優先度がDEFAULTの通知" }
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
@@ -76,10 +78,28 @@ class MainActivity : AppCompatActivity() {
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_DELAY_5s,
-                "時間差通知(5s)",
+                NOTIFICATION_DELAY_VIBE,
+                "カスタムバイブレーション",
                 NotificationManager.IMPORTANCE_HIGH
-            ).apply { description = "5秒後に発火する通知" }
+            ).apply {
+                description = "バイブレーションを設定した通知"
+                vibrationPattern = longArrayOf(
+                    0,   200,
+                    200, 200,
+                    200, 200,
+
+                    600, 200,
+                    200, 200,
+                    200, 200,
+
+                    600, 200,
+                    200, 200,
+                    200, 200,
+                    200, 200,
+                    200, 200,
+                    200, 200,
+                    200, 200)
+            }
         )
 
         // クリックリスナ
@@ -91,33 +111,39 @@ class MainActivity : AppCompatActivity() {
             "優先度LOW", "優先度がLOWの通知",
             NOTIFICATION_PRIORITY_LOW) }
 
-        binding.btHigh.setOnClickListener { createSimpleNotification(
-            "優先度HIGH", "優先度がHIGHの通知",
-            NOTIFICATION_PRIORITY_HIGH) }
-
         binding.btDefault.setOnClickListener { createSimpleNotification(
             "優先度DEFAULT", "優先度がDEFAULTの通知",
             NOTIFICATION_PRIORITY_DEFAULT) }
+
+        binding.btHigh.setOnClickListener { createSimpleNotification(
+            "優先度HIGH", "優先度がHIGHの通知",
+            NOTIFICATION_PRIORITY_HIGH) }
 
         binding.btNone.setOnClickListener { createSimpleNotification(
             "優先度NONE", "優先度がNONEの通知",
             NOTIFICATION_PRIORITY_NONE) }
 
-        binding.bt10s.setOnClickListener { lifecycleScope.launch {
+        binding.btScope.setOnClickListener { lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 Thread.sleep(5_000)
                 createSimpleNotification("時間差通知(5s)",
-                    "5秒前に実行された通知", NOTIFICATION_DELAY_5s)
+                    "非同期処理で5秒後に発行した通知", NOTIFICATION_DELAY_SCOPE)
             }
         } }
+
+        binding.btVibe.setOnClickListener { createSimpleNotification(
+            "カスタムバイブレーション", "振動をカスタムした通知",
+            NOTIFICATION_DELAY_VIBE) }
 
         setContentView(binding.root)
     }
 
+    @SuppressLint("InlinedApi")
     private fun createSimpleNotification(title: String, content: String, channel: String) {
         // 権限確認
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
             return
         }
 
