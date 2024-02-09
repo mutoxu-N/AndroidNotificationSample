@@ -7,6 +7,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -31,17 +33,27 @@ class MainActivity : AppCompatActivity() {
         private const val NOTIFICATION_PRIORITY_DEFAULT = "NOTIFICATION_PRIORITY_DEFAULT"
         private const val NOTIFICATION_PRIORITY_NONE = "NOTIFICATION_PRIORITY_NONE"
         private const val NOTIFICATION_DELAY_SCOPE = "NOTIFICATION_DELAY_SCOPE"
-        private const val NOTIFICATION_DELAY_VIBE = "NOTIFICATION_DELAY_VIBE"
+        private const val NOTIFICATION_VIBE = "NOTIFICATION_VIBE"
+        private const val NOTIFICATION_SOUND = "NOTIFICATION_SOUND"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
         binding = ActivityMainBinding.inflate(layoutInflater)
-
-        // チャンネル作成
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+        // チャンネル削除
+        notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_MIN)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_LOW)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_HIGH)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_DEFAULT)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_NONE)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_DELAY_SCOPE)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_VIBE)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_SOUND)
+
+        // チャンネル作成
         notificationManager.createNotificationChannel(NotificationChannel(
                 NOTIFICATION_PRIORITY_MIN,
                 "優先度通知(MIN)",
@@ -78,9 +90,9 @@ class MainActivity : AppCompatActivity() {
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_DELAY_VIBE,
+                NOTIFICATION_VIBE,
                 "カスタムバイブレーション",
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "バイブレーションを設定した通知"
                 vibrationPattern = longArrayOf(
@@ -99,6 +111,19 @@ class MainActivity : AppCompatActivity() {
                     200, 200,
                     200, 200,
                     200, 200)
+            }
+        )
+
+        notificationManager.createNotificationChannel(NotificationChannel(
+                NOTIFICATION_SOUND,
+                "通知音",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "音が鳴る通知"
+                setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
+                    audioAttributes
+                )
             }
         )
 
@@ -133,7 +158,12 @@ class MainActivity : AppCompatActivity() {
 
         binding.btVibe.setOnClickListener { createSimpleNotification(
             "カスタムバイブレーション", "振動をカスタムした通知",
-            NOTIFICATION_DELAY_VIBE) }
+            NOTIFICATION_VIBE) }
+
+        binding.btSound.setOnClickListener { createSimpleNotification(
+            "デフォルト通知音", "通知音が鳴る通知",
+            NOTIFICATION_SOUND
+        ) }
 
         setContentView(binding.root)
     }

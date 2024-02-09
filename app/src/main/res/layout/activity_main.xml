@@ -138,6 +138,16 @@
 
             tools:ignore="HardcodedText" />
 
+        <Button
+            android:id="@+id/btSound"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="通知音"
+
+            tools:ignore="HardcodedText" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
