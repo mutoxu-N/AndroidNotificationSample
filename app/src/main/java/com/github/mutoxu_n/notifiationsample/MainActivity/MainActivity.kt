@@ -9,6 +9,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.RingtoneManager
 import android.os.Bundle
 import android.os.SystemClock
@@ -323,7 +325,30 @@ class MainActivity : AppCompatActivity() {
             createNotification(notification)
         }
 
-        binding.btImage.setOnClickListener {  }
+        binding.btImage.setOnClickListener {
+            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("画像の通知")
+                .setContentText("画像を添付した通知")
+                .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.small))
+                .build()
+            createNotification(notification)
+        }
+
+        binding.btBigImage.setOnClickListener {
+            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("画像の通知")
+                .setContentText("大きな画像を添付した通知")
+                .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.large))
+                .setStyle(
+                    NotificationCompat.BigPictureStyle()
+                        .bigPicture(BitmapFactory.decodeResource(resources, R.drawable.large))
+                        .bigLargeIcon(null as Bitmap?)
+                )
+                .build()
+            createNotification(notification)
+        }
 
         setContentView(binding.root)
     }

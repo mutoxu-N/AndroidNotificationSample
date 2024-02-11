@@ -126,6 +126,16 @@
 
             tools:ignore="HardcodedText" />
 
+        <Button
+            android:id="@+id/btBigImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+
+            android:text="大画像"
+
+            tools:ignore="HardcodedText" />
+
     </LinearLayout>
 
     <LinearLayout
