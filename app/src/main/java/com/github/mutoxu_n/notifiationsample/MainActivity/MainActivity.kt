@@ -350,6 +350,22 @@ class MainActivity : AppCompatActivity() {
             createNotification(notification)
         }
 
+        binding.btInbox.setOnClickListener {
+            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("INBOX通知")
+                .setSubText("サブテキスト")
+                .setContentText("受信トレイスタイルの通知")
+                .setStyle(
+                    NotificationCompat.InboxStyle()
+                        .addLine("LINE1").addLine("LINE2").addLine("LINE3").addLine("LINE4")
+                        .addLine("LINE5").addLine("LINE6").addLine("LINE7").addLine("LINE8")
+                )
+                .build()
+
+            createNotification(notification)
+        }
+
         setContentView(binding.root)
     }
 
