@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.lifecycle.lifecycleScope
 import com.github.mutoxu_n.notifiationsample.R
@@ -371,6 +372,39 @@ class MainActivity : AppCompatActivity() {
                 .setStyle(
                     NotificationCompat.BigTextStyle()
                         .bigText(Data.SAMPLE_LONG_TEXT)
+                )
+                .build()
+            createNotification(notification)
+        }
+
+        binding.btMessage.setOnClickListener {
+            val yuki = Person.Builder()
+                .setName("ユウキ")
+                .build()
+
+            val mio = Person.Builder()
+                .setName("ミオ")
+                .build()
+
+            val msg1 = NotificationCompat.MessagingStyle.Message("ねえミオ、ちょっと相談があるんだけど。", 100, yuki)
+            val msg2 = NotificationCompat.MessagingStyle.Message("なに？", 200, mio)
+            val msg3 = NotificationCompat.MessagingStyle.Message("実は、仕事でちょっと悩んでて。", 100, yuki)
+            val msg4 = NotificationCompat.MessagingStyle.Message("そうなんだ、どんな悩み？", 200, mio)
+            val msg5 = NotificationCompat.MessagingStyle.Message("上司から新しいプロジェクトを任されたんだけど、自信がないんだよね。", 100, yuki)
+            val msg6 = NotificationCompat.MessagingStyle.Message("なるほど。でも、ユウキならきっとできるよ。", 200, mio)
+            val msg7 = NotificationCompat.MessagingStyle.Message("ありがとう、ミオ。そう言ってくれると少し自信がつくよ。", 100, yuki)
+            val msg8 = NotificationCompat.MessagingStyle.Message("何かあったらいつでも相談してね。", 200, mio)
+            val msg9 = NotificationCompat.MessagingStyle.Message("うん、ありがとう。", 100, yuki)
+
+            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("メッセージ通知")
+                .setContentText("メッセージスタイルを適用した通知")
+                .setStyle(
+                    NotificationCompat.MessagingStyle(yuki)
+                        .addMessage(msg1).addMessage(msg2).addMessage(msg3)
+                        .addMessage(msg4).addMessage(msg5).addMessage(msg6)
+                        .addMessage(msg7).addMessage(msg8).addMessage(msg9)
                 )
                 .build()
             createNotification(notification)
