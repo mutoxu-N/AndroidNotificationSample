@@ -186,33 +186,16 @@ class MainActivity : AppCompatActivity() {
             NOTIFICATION_PRIORITY_NONE) }
 
         binding.btGroup.setOnClickListener {
-            // 権限確認
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-                return@setOnClickListener
-            }
-
-            val not = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("通知@${ZonedDateTime.now().toLocalTime()}")
                 .setContentText("通知の内容\n${ZonedDateTime.now()}")
                 .setGroup(SAMPLE_GROUP)
                 .build()
-
-            with(NotificationManagerCompat.from(this@MainActivity)) {
-                notify(SystemClock.uptimeMillis().toInt(), not)
-            }
+            createNotification(notification, SystemClock.uptimeMillis().toInt())
         }
 
         binding.btGroupSummary.setOnClickListener {
-            // 権限確認
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-                return@setOnClickListener
-            }
-
             val summary = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("サマリー")
@@ -220,11 +203,7 @@ class MainActivity : AppCompatActivity() {
                 .setGroup(SAMPLE_GROUP)
                 .setGroupSummary(true)
                 .build()
-
-            with(NotificationManagerCompat.from(this@MainActivity)) {
-                notify(999, summary)
-            }
-
+            createNotification(summary, 999)
         }
 
         binding.btScope.setOnClickListener { lifecycleScope.launch {
@@ -289,13 +268,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btProgress.setOnClickListener {
-            // 権限確認
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-                return@setOnClickListener
-            }
-
             // 通知作成
             val title = "進捗通知"
             val content = "進捗バーが進んでいく"
@@ -309,42 +281,31 @@ class MainActivity : AppCompatActivity() {
                 .setOnlyAlertOnce(true)
 
             lifecycleScope.launch { withContext(Dispatchers.IO){
-                with(NotificationManagerCompat.from(this@MainActivity)) {
-                    // 0%
-                    builder.setProgress(PROGRESS_MAX, progressCurrent, false)
-                    notify(R.string.app_name, builder.build())
+                // 0%
+                builder.setProgress(PROGRESS_MAX, progressCurrent, false)
+                createNotification(builder.build())
 
-                    while(progressCurrent < PROGRESS_MAX) {
-                        Thread.sleep(50)
-                        progressCurrent++
-                        builder
-                            .setProgress(PROGRESS_MAX, progressCurrent, false)
-                            .setContentText("$content ($progressCurrent%)")
-                        notify(R.string.app_name, builder.build())
-                    }
-
-                    // 100%
+                while(progressCurrent < PROGRESS_MAX) {
                     Thread.sleep(50)
+                    progressCurrent++
                     builder
                         .setProgress(PROGRESS_MAX, progressCurrent, false)
-                        .setContentText("ダウンロード完了")
-                        .setOnlyAlertOnce(false)
-                    notify(R.string.app_name, builder.build())
+                        .setContentText("$content ($progressCurrent%)")
+                    createNotification(builder.build())
                 }
+
+                // 100%
+                Thread.sleep(50)
+                builder
+                    .setProgress(PROGRESS_MAX, progressCurrent, false)
+                    .setContentText("ダウンロード完了")
+                    .setOnlyAlertOnce(false)
+                createNotification(builder.build())
             } }
         }
 
         binding.btPush.setOnClickListener {
-            // 権限確認
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
-                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
-                return@setOnClickListener
-            }
-
             // 通知作成
-            val title = "押下可能な通知"
-            val content = "通知を押すとIntentが起動する"
             val pendIntent = PendingIntent.getActivities(
                 this@MainActivity,
                 2,
@@ -352,16 +313,17 @@ class MainActivity : AppCompatActivity() {
                 PendingIntent.FLAG_IMMUTABLE
             )
 
-            val builder = NotificationCompat.Builder(this, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this, NOTIFICATION_DEFAULT)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(title)
-                .setContentText(content)
+                .setContentTitle("押下可能な通知")
+                .setContentText("通知を押すとIntentが起動する")
                 .setContentIntent(pendIntent)
+                .build()
 
-            with(NotificationManagerCompat.from(this)) {
-                notify(R.string.app_name, builder.build())
-            }
+            createNotification(notification)
         }
+
+        binding.btImage.setOnClickListener {  }
 
         setContentView(binding.root)
     }
@@ -406,5 +368,21 @@ class MainActivity : AppCompatActivity() {
             notify(R.string.app_name, builder.build())
         }
     }
+
+
+    @SuppressLint("InlinedApi")
+    private fun createNotification(notification: Notification, id: Int = R.string.app_name) {
+        // 権限確認
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+            return
+        }
+
+        with(NotificationManagerCompat.from(this)) {
+            notify(id, notification)
+        }
+    }
+
 
 }
