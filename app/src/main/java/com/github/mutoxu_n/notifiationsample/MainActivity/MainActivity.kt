@@ -11,7 +11,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.RingtoneManager
 import android.os.Bundle
-import android.util.Log
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -25,6 +25,7 @@ import com.github.mutoxu_n.notifiationsample.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.ZonedDateTime
 
 @SuppressLint("InlinedApi")
 class MainActivity : AppCompatActivity() {
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         private const val NOTIFICATION_VIBE = "NOTIFICATION_VIBE"
         private const val NOTIFICATION_SOUND = "NOTIFICATION_SOUND"
         private const val NOTIFICATION_PROGRESS = "NOTIFICATION_PROGRESS"
+        private const val SAMPLE_GROUP = "SAMPLE_GROUP"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -182,6 +184,48 @@ class MainActivity : AppCompatActivity() {
         binding.btNone.setOnClickListener { createSimpleNotification(
             "優先度NONE", "優先度がNONEの通知",
             NOTIFICATION_PRIORITY_NONE) }
+
+        binding.btGroup.setOnClickListener {
+            // 権限確認
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+                return@setOnClickListener
+            }
+
+            val not = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("通知@${ZonedDateTime.now().toLocalTime()}")
+                .setContentText("通知の内容\n${ZonedDateTime.now()}")
+                .setGroup(SAMPLE_GROUP)
+                .build()
+
+            with(NotificationManagerCompat.from(this@MainActivity)) {
+                notify(SystemClock.uptimeMillis().toInt(), not)
+            }
+        }
+
+        binding.btGroupSummary.setOnClickListener {
+            // 権限確認
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "通知の権限がありません", Toast.LENGTH_SHORT).show()
+                ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+                return@setOnClickListener
+            }
+
+            val summary = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("サマリー")
+                .setContentText("通知のまとめ")
+                .setGroup(SAMPLE_GROUP)
+                .setGroupSummary(true)
+                .build()
+
+            with(NotificationManagerCompat.from(this@MainActivity)) {
+                notify(999, summary)
+            }
+
+        }
 
         binding.btScope.setOnClickListener { lifecycleScope.launch {
             withContext(Dispatchers.IO) {
