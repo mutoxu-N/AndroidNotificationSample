@@ -20,7 +20,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.github.mutoxu_n.notifiationsample.R
 import com.github.mutoxu_n.notifiationsample.databinding.ActivityMainBinding
@@ -31,7 +30,6 @@ import java.time.ZonedDateTime
 
 @SuppressLint("InlinedApi")
 class MainActivity : AppCompatActivity() {
-    private lateinit var viewModel: MainActivityViewModel
     private lateinit var binding: ActivityMainBinding
 
     companion object {
@@ -51,7 +49,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
         binding = ActivityMainBinding.inflate(layoutInflater)
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -363,6 +360,19 @@ class MainActivity : AppCompatActivity() {
                 )
                 .build()
 
+            createNotification(notification)
+        }
+
+        binding.btLong.setOnClickListener {
+            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("長文通知")
+                .setContentText("普通より長い文を通知として表示できる")
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(Data.SAMPLE_LONG_TEXT)
+                )
+                .build()
             createNotification(notification)
         }
 

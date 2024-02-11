@@ -146,6 +146,16 @@
 
             tools:ignore="HardcodedText" />
 
+        <Button
+            android:id="@+id/btLong"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+
+            android:text="長文"
+
+            tools:ignore="HardcodedText" />
+
     </LinearLayout>
 
     <LinearLayout
