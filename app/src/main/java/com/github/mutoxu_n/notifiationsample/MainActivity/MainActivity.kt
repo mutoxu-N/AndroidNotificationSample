@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory
 import android.media.RingtoneManager
 import android.os.Bundle
 import android.os.SystemClock
+import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -406,6 +407,20 @@ class MainActivity : AppCompatActivity() {
                         .addMessage(msg4).addMessage(msg5).addMessage(msg6)
                         .addMessage(msg7).addMessage(msg8).addMessage(msg9)
                 )
+                .build()
+            createNotification(notification)
+        }
+
+        binding.btCustom.setOnClickListener {
+            val layoutSmall = RemoteViews(packageName, R.layout.custom_notification_small)
+            val layoutExpanded = RemoteViews(packageName, R.layout.custom_notification_expanded)
+
+            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("カスタム通知")
+                .setContentText("カスタムレイアウトの通知")
+                .setCustomContentView(layoutSmall)
+                .setCustomBigContentView(layoutExpanded)
                 .build()
             createNotification(notification)
         }
