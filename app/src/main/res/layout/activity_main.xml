@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="10dp"
-    tools:context=".MainActivity.MainActivity">
+    tools:context=".MainActivity">
 
     <LinearLayout
         android:id="@+id/ll1"
@@ -184,16 +184,6 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <Button
-            android:id="@+id/btScope"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="2dp"
-
-            android:text="非同期(5s)"
-
-            tools:ignore="HardcodedText" />
-
-        <Button
             android:id="@+id/btVibe"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -240,6 +230,16 @@
             android:layout_margin="2dp"
 
             android:text="カスタム"
+
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btDelay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="5秒後"
 
             tools:ignore="HardcodedText" />
 

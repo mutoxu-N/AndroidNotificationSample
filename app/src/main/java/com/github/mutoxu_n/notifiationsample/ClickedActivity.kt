@@ -1,11 +1,10 @@
-package com.github.mutoxu_n.notifiationsample.MainActivity
+package com.github.mutoxu_n.notifiationsample
 
 import android.app.NotificationManager
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.RemoteInput
-import com.github.mutoxu_n.notifiationsample.R
 import com.github.mutoxu_n.notifiationsample.databinding.ActivityClickedBinding
 
 class ClickedActivity : AppCompatActivity() {

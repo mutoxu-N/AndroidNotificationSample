@@ -1,7 +1,8 @@
-package com.github.mutoxu_n.notifiationsample.MainActivity
+package com.github.mutoxu_n.notifiationsample
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,7 +24,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.lifecycle.lifecycleScope
-import com.github.mutoxu_n.notifiationsample.R
 import com.github.mutoxu_n.notifiationsample.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,10 +42,11 @@ class MainActivity : AppCompatActivity() {
         private const val NOTIFICATION_PRIORITY_HIGH = "NOTIFICATION_PRIORITY_HIGH"
         private const val NOTIFICATION_PRIORITY_DEFAULT = "NOTIFICATION_PRIORITY_DEFAULT"
         private const val NOTIFICATION_PRIORITY_NONE = "NOTIFICATION_PRIORITY_NONE"
-        private const val NOTIFICATION_DELAY_SCOPE = "NOTIFICATION_DELAY_SCOPE"
         private const val NOTIFICATION_VIBE = "NOTIFICATION_VIBE"
         private const val NOTIFICATION_SOUND = "NOTIFICATION_SOUND"
         private const val NOTIFICATION_PROGRESS = "NOTIFICATION_PROGRESS"
+
+        const val NOTIFICATION_DELAY = "NOTIFICATION_DELAY"
         private const val SAMPLE_GROUP = "SAMPLE_GROUP"
     }
 
@@ -61,7 +62,7 @@ class MainActivity : AppCompatActivity() {
         notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_HIGH)
         notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_DEFAULT)
         notificationManager.deleteNotificationChannel(NOTIFICATION_PRIORITY_NONE)
-        notificationManager.deleteNotificationChannel(NOTIFICATION_DELAY_SCOPE)
+        notificationManager.deleteNotificationChannel(NOTIFICATION_DELAY)
         notificationManager.deleteNotificationChannel(NOTIFICATION_VIBE)
         notificationManager.deleteNotificationChannel(NOTIFICATION_SOUND)
         notificationManager.deleteNotificationChannel(NOTIFICATION_PROGRESS)
@@ -80,14 +81,14 @@ class MainActivity : AppCompatActivity() {
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_PRIORITY_MIN,
+            NOTIFICATION_PRIORITY_MIN,
                 "優先度通知(MIN)",
                 NotificationManager.IMPORTANCE_MIN
             ).apply { description = "優先度がMINの通知" }
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_PRIORITY_LOW,
+            NOTIFICATION_PRIORITY_LOW,
                 "優先度通知(LOW)",
                 NotificationManager.IMPORTANCE_LOW
             ).apply { description = "優先度がLOWの通知" }
@@ -101,21 +102,21 @@ class MainActivity : AppCompatActivity() {
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_PRIORITY_HIGH,
+            NOTIFICATION_PRIORITY_HIGH,
                 "優先度通知(HIGH)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply { description = "優先度がHIGHの通知" }
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_PRIORITY_NONE,
+            NOTIFICATION_PRIORITY_NONE,
                 "優先度通知(NONE)",
                 NotificationManager.IMPORTANCE_NONE
             ).apply { description = "優先度がNONEの通知" }
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_VIBE,
+            NOTIFICATION_VIBE,
                 "カスタムバイブレーション",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
@@ -140,7 +141,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         notificationManager.createNotificationChannel(NotificationChannel(
-                NOTIFICATION_SOUND,
+            NOTIFICATION_SOUND,
                 "通知音",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
@@ -164,30 +165,48 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+        notificationManager.createNotificationChannel(
+            NotificationChannel(
+                NOTIFICATION_DELAY,
+                "時間差通知",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description="AlarmManagerを用いて時間差で通知する"
+                vibrationPattern = longArrayOf(0, 500)
+            }
+        )
+
 
         // クリックリスナ
         binding.btMin.setOnClickListener { createSimpleNotification(
             "優先度MIN", "優先度がMINの通知",
-            NOTIFICATION_PRIORITY_MIN) }
+            NOTIFICATION_PRIORITY_MIN
+        ) }
 
         binding.btLow.setOnClickListener { createSimpleNotification(
             "優先度LOW", "優先度がLOWの通知",
-            NOTIFICATION_PRIORITY_LOW) }
+            NOTIFICATION_PRIORITY_LOW
+        ) }
 
         binding.btDefault.setOnClickListener { createSimpleNotification(
             "優先度DEFAULT", "優先度がDEFAULTの通知",
-            NOTIFICATION_PRIORITY_DEFAULT) }
+            NOTIFICATION_PRIORITY_DEFAULT
+        ) }
 
         binding.btHigh.setOnClickListener { createSimpleNotification(
             "優先度HIGH", "優先度がHIGHの通知",
-            NOTIFICATION_PRIORITY_HIGH) }
+            NOTIFICATION_PRIORITY_HIGH
+        ) }
 
         binding.btNone.setOnClickListener { createSimpleNotification(
             "優先度NONE", "優先度がNONEの通知",
-            NOTIFICATION_PRIORITY_NONE) }
+            NOTIFICATION_PRIORITY_NONE
+        ) }
 
         binding.btGroup.setOnClickListener {
-            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("通知@${ZonedDateTime.now().toLocalTime()}")
                 .setContentText("通知の内容\n${ZonedDateTime.now()}")
@@ -197,7 +216,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btGroupSummary.setOnClickListener {
-            val summary = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val summary = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("サマリー")
                 .setContentText("通知のまとめ")
@@ -207,17 +228,10 @@ class MainActivity : AppCompatActivity() {
             createNotification(summary, 999)
         }
 
-        binding.btScope.setOnClickListener { lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                Thread.sleep(5_000)
-                createSimpleNotification("時間差通知(5s)",
-                    "非同期処理で5秒後に発行した通知", NOTIFICATION_DELAY_SCOPE)
-            }
-        } }
-
         binding.btVibe.setOnClickListener { createSimpleNotification(
             "カスタムバイブレーション", "振動をカスタムした通知",
-            NOTIFICATION_VIBE) }
+            NOTIFICATION_VIBE
+        ) }
 
         binding.btSound.setOnClickListener { createSimpleNotification(
             "デフォルト通知音", "通知音が鳴る通知",
@@ -275,7 +289,9 @@ class MainActivity : AppCompatActivity() {
             val PROGRESS_MAX = 100
             var progressCurrent = 0
 
-            val builder = NotificationCompat.Builder(this, NOTIFICATION_PROGRESS)
+            val builder = NotificationCompat.Builder(this,
+                NOTIFICATION_PROGRESS
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(title)
                 .setContentText(content)
@@ -314,7 +330,9 @@ class MainActivity : AppCompatActivity() {
                 PendingIntent.FLAG_IMMUTABLE
             )
 
-            val notification = NotificationCompat.Builder(this, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("押下可能な通知")
                 .setContentText("通知を押すとIntentが起動する")
@@ -325,7 +343,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btImage.setOnClickListener {
-            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("画像の通知")
                 .setContentText("画像を添付した通知")
@@ -335,7 +355,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btBigImage.setOnClickListener {
-            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("画像の通知")
                 .setContentText("大きな画像を添付した通知")
@@ -350,7 +372,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btInbox.setOnClickListener {
-            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("INBOX通知")
                 .setSubText("サブテキスト")
@@ -366,7 +390,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btLong.setOnClickListener {
-            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("長文通知")
                 .setContentText("普通より長い文を通知として表示できる")
@@ -397,7 +423,9 @@ class MainActivity : AppCompatActivity() {
             val msg8 = NotificationCompat.MessagingStyle.Message("何かあったらいつでも相談してね。", 200, mio)
             val msg9 = NotificationCompat.MessagingStyle.Message("うん、ありがとう。", 100, yuki)
 
-            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("メッセージ通知")
                 .setContentText("メッセージスタイルを適用した通知")
@@ -415,7 +443,9 @@ class MainActivity : AppCompatActivity() {
             val layoutSmall = RemoteViews(packageName, R.layout.custom_notification_small)
             val layoutExpanded = RemoteViews(packageName, R.layout.custom_notification_expanded)
 
-            val notification = NotificationCompat.Builder(this@MainActivity, NOTIFICATION_DEFAULT)
+            val notification = NotificationCompat.Builder(this@MainActivity,
+                NOTIFICATION_DEFAULT
+            )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("カスタム通知")
                 .setContentText("カスタムレイアウトの通知")
@@ -423,6 +453,22 @@ class MainActivity : AppCompatActivity() {
                 .setCustomBigContentView(layoutExpanded)
                 .build()
             createNotification(notification)
+        }
+
+        binding.btDelay.setOnClickListener {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val alarmPendingIntent = PendingIntent.getBroadcast(
+                this@MainActivity,
+                1,
+                Intent(this@MainActivity, AlarmReceiver::class.java),
+                PendingIntent.FLAG_MUTABLE
+            )
+
+            alarmManager.set(
+                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() + 5000,
+                alarmPendingIntent
+            )
         }
 
         setContentView(binding.root)

@@ -1,4 +1,4 @@
-package com.github.mutoxu_n.notifiationsample.MainActivity
+package com.github.mutoxu_n.notifiationsample
 
 
 class Data {
