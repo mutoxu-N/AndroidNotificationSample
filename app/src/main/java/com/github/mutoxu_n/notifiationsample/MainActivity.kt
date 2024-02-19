@@ -15,6 +15,7 @@ import android.graphics.BitmapFactory
 import android.media.RingtoneManager
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -24,10 +25,18 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.lifecycle.lifecycleScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
+import androidx.work.WorkerParameters
 import com.github.mutoxu_n.notifiationsample.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Duration
 import java.time.ZonedDateTime
 
 @SuppressLint("InlinedApi")
@@ -36,7 +45,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val KEY_TEXT_REPLY = "KEY_TEXT_REPLAY"
-        private const val NOTIFICATION_DEFAULT = "NOTIFICATION_DEFAULT"
+        const val NOTIFICATION_DEFAULT = "NOTIFICATION_DEFAULT"
         private const val NOTIFICATION_PRIORITY_MIN = "NOTIFICATION_PRIORITY_MIN"
         private const val NOTIFICATION_PRIORITY_LOW = "NOTIFICATION_PRIORITY_LOW"
         private const val NOTIFICATION_PRIORITY_HIGH = "NOTIFICATION_PRIORITY_HIGH"
@@ -50,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         private const val SAMPLE_GROUP = "SAMPLE_GROUP"
     }
 
+    @SuppressLint("ShortAlarm")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -469,6 +479,21 @@ class MainActivity : AppCompatActivity() {
                 SystemClock.elapsedRealtime() + 5000,
                 alarmPendingIntent
             )
+        }
+
+        binding.btSyncStart.setOnClickListener {
+            val workManager = WorkManager.getInstance(this@MainActivity)
+            val workRequest: WorkRequest = PeriodicWorkRequestBuilder<SyncWorker>(Duration.ofMinutes(15))
+                .apply {
+                    addTag(SyncWorker.WORKER_TAG)
+                }.build()
+
+            workManager.enqueue(workRequest)
+        }
+
+        binding.btSyncEnd.setOnClickListener {
+            val workManager = WorkManager.getInstance(this@MainActivity)
+            workManager.cancelAllWorkByTag(SyncWorker.WORKER_TAG)
         }
 
         setContentView(binding.root)

@@ -260,6 +260,26 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
+        <Button
+            android:id="@+id/btSyncStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="定期開始"
+
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/btSyncEnd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+
+            android:text="定期開始"
+
+            tools:ignore="HardcodedText" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
